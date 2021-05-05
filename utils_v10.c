@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 
 #include "utils_v10.h"
+#include "messages.h"
 
 //******************************************************
 // DATE AND TIME
@@ -459,4 +460,25 @@ int spoll(struct pollfd *fds, nfds_t nfds, int timeout){
   checkNeg(ret, "poll failure");
 
   return ret;
+}
+
+int initSocketServer(int port){
+  int sockfd  = ssocket();
+
+  /* no socket error */
+  
+  sbind(port, sockfd);
+  
+  /* no bind error */
+  slisten(sockfd, BACKLOG);
+  
+  /* no listen error */
+  return sockfd;
+}
+
+int initSocketClient(char ServerIP[16], int Serverport) 
+{
+  int sockfd = ssocket();
+  sconnect(ServerIP, Serverport, sockfd);
+  return sockfd;
 }

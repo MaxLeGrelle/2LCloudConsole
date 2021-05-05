@@ -3,6 +3,14 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+server/maint
+server/server
+server/stat
+client/client
+*.o
+server/*.o
+client/*.o
+
 # User-specific files
 *.rsuser
 *.suo

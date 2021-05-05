@@ -14,7 +14,7 @@ maint: utils_v10.h  utils_v10.o server/maint.c
 stat: utils_v10.h  utils_v10.o server/stat.c
 	cc $(CFLAGS) -o server/stat server/stat.c utils_v10.o
 
-utils_v10.o: utils_v10.h utils_v10.c 
+utils_v10.o: messages.h utils_v10.h utils_v10.c 
 	cc $(CFLAGS) -c utils_v10.c 
 
 # for dev purpose

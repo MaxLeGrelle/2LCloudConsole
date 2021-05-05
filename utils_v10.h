@@ -23,6 +23,8 @@
 #include <netdb.h>
 #include <poll.h>
 
+#include "utils_v10.h"
+#include "messages.h"
 
 #define BUFFER_SIZE 1024
 
@@ -345,6 +347,23 @@ void hostname_to_ip (char * hostname, char* ip);
 //       zero revents fields (in other words, those descriptors with events or errors  reported).   A
 //       value  of 0 indicates that the call timed out and no file descriptors were ready.
 int spoll(struct pollfd *fds, nfds_t nfds, int timeout);
+
+/* SERVER */
+
+/**
+ * PRE: port : integer of 4 numbers greater than 1000
+ * POST: the socket file descriptor returned is 
+ * listening on the port given in parameter
+ * RES: sockfd : a socket file descriptor.
+ */ 
+int initSocketServer(int port);
+
+// PRE: ServierIP : a valid IP address
+//      ServerPort: a valid port number
+// POST: on success connects a client socket to ServerIP:port
+//       return socket file descriptor
+//       on failure, displays error cause and quits the program
+int initSocketClient(char ServerIP[16], int Serverport);
 
 #endif  // _UTILS_H_
 
