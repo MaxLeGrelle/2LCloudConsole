@@ -2,56 +2,26 @@
 
 #include "../utils_v10.h"
 
-// #define COMM_ADD_PROG '+\n'
-// #define COMM_EDIT_PROG '.\n'
-// #define COMM_EXEC_PROG '@\n'
-// #define COMM_EXIT 'q\n'
-// #define COMM_HELP 'h\n'
-
-const static char COMM_ADD_PROG = '+';
-//const static char* COMM_EDIT_PROG = ".\n";
-const static char COMM_EXEC_PROG = '@';
-const static char COMM_EXIT = 'q';
+#define COMM_ADD_PROG '+'
+#define COMM_EDIT_PROG '.'
+#define COMM_EXEC_PROG '@'
+#define COMM_EXIT 'q'
+#define COMM_HELP 'h'
 
 #define MAX_COMM 255
 
 void printHelp() {
     printf("Commandes disponibles:\n");
-    printf("\t- + <chemin d'un fichier C>: Permet d'ajouter le programme situé au chemin spécifié\n");
-    printf("\t- . num <chemin d'un fichier C>: Permet de remplacer le programme associé portant le numéro 'num'\n");
-    printf("\t- @ num: Permet de demander au serveur d'exécuter le programme ayant le numéro 'num'\n");
-    printf("\t- h: Permet d'afficher l'aide\n");
-    printf("\t- q: Quitte le programme\n");
+    printf("\t- %c: <chemin d'un fichier C>: Permet d'ajouter le programme situé au chemin spécifié\n", COMM_ADD_PROG);
+    printf("\t- %c: num <chemin d'un fichier C>: Permet de remplacer le programme associé portant le numéro 'num'\n", COMM_EDIT_PROG);
+    printf("\t- %c: num: Permet de demander au serveur d'exécuter le programme ayant le numéro 'num'\n", COMM_EXEC_PROG);
+    printf("\t- %c: Permet d'afficher l'aide\n", COMM_HELP);
+    printf("\t- %c: Quitte le programme\n", COMM_EXIT);
 }
 
-
-bool isNumber(char c) {
-    return c >= '0' && c <= '9';
-}
-
-int convertToInt(char c) {
-    return c - '0';
-}
-
-int parseFirstInts(char* s, int nbIntToParse) {
-    if (strlen(s) == 1 && isNumber(s[0])) {
-        return convertToInt(s[0]);
-    }
-    char* stringOfNumbers = (char*)malloc(nbIntToParse*sizeof(char));
-    if (stringOfNumbers == NULL) return -1;
-    for (int i = 0; i < strlen(s)+1; i++) {
-        if (isNumber(s[i])) {
-            strncat(stringOfNumbers, &s[i], 1);
-        }
-        if (strlen(stringOfNumbers) == nbIntToParse) break;
-    }
-    int nbParsed = atoi(stringOfNumbers);
-    free(stringOfNumbers);
-    return nbParsed;
-}
-
-void askServerExecProgram(int number) {
-    printf("%d\n", number);
+void askServerExecProgram(const StructMessage* messageToSend, int socketServer) {
+    printf("%d\n", messageToSend->numProg);
+    swrite(socketServer, messageToSend, sizeof(messageToSend));
 }
 
 StructMessage readCommandUser() {
@@ -67,8 +37,9 @@ StructMessage readCommandUser() {
             correctInput = true;
         }else if (action == COMM_EXEC_PROG) {
             messageToReturn.code = EXEC;
-            messageToReturn.numProg = parseFirstInts(commande, 3);
-            askServerExecProgram(messageToReturn.numProg);
+            int ret = parseFirstInts(commande, 2, 3);
+            if (ret == -1) exit(1);
+            messageToReturn.numProg = ret;
             correctInput = true;
         }else if (action == COMM_EXIT) {
             printf("Au revoir!\n");
@@ -90,6 +61,6 @@ int main(int argc, char* argv[]) {
     
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
     StructMessage message = readCommandUser();
+    askServerExecProgram(&message, sockFD);
 
-    swrite(sockFD, &message, sizeof(message));
 }

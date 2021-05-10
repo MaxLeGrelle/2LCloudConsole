@@ -482,3 +482,30 @@ int initSocketClient(char ServerIP[16], int Serverport)
   sconnect(ServerIP, Serverport, sockfd);
   return sockfd;
 }
+
+
+bool isNumber(char c) {
+    return c >= '0' && c <= '9';
+}
+
+int convertToInt(char c) {
+    return c - '0';
+}
+
+int parseFirstInts(char* s,int start, int nbIntToParse) {
+    if (strlen(s) == 1 && isNumber(s[0])) {
+        return atoi(s);
+    }
+    char* stringOfNumbers = (char*)malloc(nbIntToParse*sizeof(char));
+    if (stringOfNumbers == NULL) return -1;
+    for (int i = start; i < nbIntToParse+start; i++) {
+        if (isNumber(s[i])) {
+            strncat(stringOfNumbers, &s[i], 1);
+        }else {
+          break;
+        }
+    }
+    int nbParsed = atoi(stringOfNumbers);
+    free(stringOfNumbers);
+    return nbParsed;
+}
