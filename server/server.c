@@ -9,6 +9,7 @@ void addProgram(File fileToCreate) {
 
 void execProgram(int numProg) {
     printf("Le client veut exec le prog num: %d\n", numProg);
+    sexecl("./server/programs/"+numProg, "server/programs/"+numProg,NULL);
 
 }
 
@@ -27,7 +28,6 @@ void clientProcess(void* socket) {
 int main(int argc, char* argv[]) {
     int port = atoi(argv[1]);
     int clientSocketFD;
-
     //init server's socket
     int servSockFD = initSocketServer(port);
     printf("Le serveur est à l'écoute sur le port %d\n", port);
