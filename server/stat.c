@@ -16,20 +16,24 @@ int main(int argc, char *argv[]){
     // GET SHARED MEMORY
     int shm_id = sshmget(SHM_KEY, sizeof(files), 0);
     files* f = sshmat(shm_id);
+
+    sem_down0(sem_id);
+    
     if( fileNumber >= f->size){//no stat to show
         printf("numero de fichier inexistant");
+        sem_up0(sem_id);
+        sshmdt(f); 
         _exit(1);
     }
     else{ //show stat about
-        sem_down0(sem_id);
         printf("%d\n",f->tab[fileNumber].number);
         printf("%s\n",f->tab[fileNumber].name);
         printf("%s", f->tab[fileNumber].compile ? "true" : "false");
         printf("%d\n",f->tab[fileNumber].numberOfExecutions);
         printf("%d\n",f->tab[fileNumber].totalTimeExecution);
+        sshmdt(f);
         sem_up0(sem_id); 
     }
-
-    sshmdt(f); 
+    _exit(0);
 
 }
