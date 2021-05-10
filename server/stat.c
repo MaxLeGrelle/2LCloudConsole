@@ -1,5 +1,35 @@
-#include "../utils_v10.h"
+#include <stdbool.h>
 
-int main() {
+#include "../utils_v10.h"
+#include "./filesInfo.h"
+
+#define SHM_KEY 493 //shared memory key
+#define SEM_KEY 925 //semaphore key
+
+int main(int argc, char *argv[]){
+
+    int fileNumber = atoi(argv[1]);
+     
+    // GET SEMAPHORE
+    int sem_id = sem_get(SEM_KEY, 1);
+
+    // GET SHARED MEMORY
+    int shm_id = sshmget(SHM_KEY, sizeof(files), 0);
+    files* f = sshmat(shm_id);
+    if( fileNumber >= f->size){//no stat to show
+        printf("numero de fichier inexistant");
+        _exit(1);
+    }
+    else{ //show stat about
+        sem_down0(sem_id);
+        printf("%d\n",f->tab[fileNumber].number);
+        printf("%s\n",f->tab[fileNumber].name);
+        printf("%s", f->tab[fileNumber].compile ? "true" : "false");
+        printf("%d\n",f->tab[fileNumber].numberOfExecutions);
+        printf("%d\n",f->tab[fileNumber].totalTimeExecution);
+        sem_up0(sem_id); 
+    }
+
+    sshmdt(f); 
 
 }
