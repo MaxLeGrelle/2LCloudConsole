@@ -365,6 +365,27 @@ int initSocketServer(int port);
 //       on failure, displays error cause and quits the program
 int initSocketClient(char ServerIP[16], int Serverport);
 
+/**
+ * PRE: c : any character.
+ * RES: returns true if c is a number between 0 and 9 and false otherwise.
+ */
+bool isNumber(char c);
+
+/**
+ * PRE: c : a character between '0' and '9'.
+ * RES: the integer corresponding to the char given in parameter.
+ */ 
+int convertToInt(char c);
+
+/**
+ * PRE: s : the string to parse.
+ *      start : the index where the method will start parsing.
+ *      nbIntToParse : the number of character represenring an int to parse.
+ * RES: returns the integer parsed from the string s found between 
+ *      start and start+nbIntToParse. It returns -1 on error.
+ */
+int parseFirstInts(char* s,int start, int nbIntToParse);
+
 #endif  // _UTILS_H_
 
 
