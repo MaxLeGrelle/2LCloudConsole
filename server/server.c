@@ -1,10 +1,27 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "../utils_v10.h"
 
 #define MAX_CLIENTS 50
 
-void addProgram(File fileToCreate) {
+void addProgram(File fileToCreate, int socket) {
+    int fdNewFile = sopen("programs/test.c", O_CREAT | O_TRUNC | O_WRONLY, 0777);
     printf("Le client veut ajouter un programme\n");
-    printf("Nom du programme: %s\nNombre de bytes: %d", fileToCreate.nameFile, fileToCreate.size);
+    printf("Nom du programme: %s\n", fileToCreate.nameFile);
+    char fileBlock[BLOCK_FILE_MAX];
+    printf("En attente du contenu du fichier à ajouter ...\n");
+    int nbCharLu = sread(socket, fileBlock, BLOCK_FILE_MAX);
+    int i = 1;
+    while(nbCharLu != 0) {
+        swrite(fdNewFile, fileBlock, nbCharLu);
+        nbCharLu = sread(socket, fileBlock, BLOCK_FILE_MAX);
+        i++;
+    }
+    printf("Tout le fichier a été recu !\n");
+    
 }
 
 void execProgram(int numProg) {
@@ -18,7 +35,7 @@ void clientProcess(void* socket) {
     StructMessage message;
     sread(*clientSocketFD, &message, sizeof(message));
     if (message.code == ADD) {
-        addProgram(message.file);
+        addProgram(message.file, *clientSocketFD);
     }else if (message.code == EXEC) {
         execProgram(message.numProg);
     }

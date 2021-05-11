@@ -6,6 +6,7 @@
 #define MSG_MAX 256
 #define BLOCK_FILE_MAX 1024
 #define NAME_FILE_MAX 255
+#define PATH_FILE_MAX 255
 
 #define EXEC -2
 #define ADD -1
@@ -13,6 +14,7 @@
 typedef struct {
   char fileData[BLOCK_FILE_MAX];
   char nameFile[NAME_FILE_MAX];
+  char path[PATH_FILE_MAX];
   int size;
 } File;
 
