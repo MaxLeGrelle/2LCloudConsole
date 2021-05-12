@@ -30,6 +30,6 @@ typedef struct {
   int state;
   int timeOfExecution;
   int returnCode;
-} MessageAfterExecution;
+} ReturnMessage;
 
 #endif

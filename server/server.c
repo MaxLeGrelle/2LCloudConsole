@@ -60,8 +60,8 @@ void changeInformationAfterExec(int numProg, long timeSpent){
 
 }
 
-MessageAfterExecution execProgram(int numProg, void* socket) {
-    MessageAfterExecution mae;
+ReturnMessage execProgram(int numProg, void* socket) {
+    ReturnMessage mae;
     printf("Le client veut exec le prog num: %d\n", numProg);
     struct timeval start, end;
     char arg1[25];
