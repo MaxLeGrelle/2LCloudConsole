@@ -2,6 +2,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/socket.h>
 
 #include "../utils_v10.h"
 
@@ -27,14 +29,21 @@ void askServerExecProgram(const StructMessage* messageToSend) {
 }
 
 void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
+    //envoie fichier vers server
     int fd = sopen(messageToSend->file.path, O_RDONLY, 0600);
     char buff[BLOCK_FILE_MAX];
     int nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
     while(nbCharLu != 0) {
-        swrite(socketServer, buff, BLOCK_FILE_MAX);
+        nwrite(socketServer, buff, nbCharLu);
         nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
     }
-    printf("Programme ajouté au server !\n");
+    int ret = shutdown(socketServer, SHUT_WR);
+    checkNeg(ret, "ERROR shutdown\n");
+
+    //attente réponse server
+    StructMessage responseServer;
+    nbCharLu = sread(socketServer, &responseServer, sizeof(responseServer));
+
 }
 
 StructMessage readCommandUser(int socketServer) {
@@ -50,6 +59,9 @@ StructMessage readCommandUser(int socketServer) {
             char* path = commande+2; //points to first char of path
             path[strlen(path)-1] = '\0'; //remove \n
             strcpy(messageToReturn.file.path, path);
+            char* pntFileName = strrchr(path, '/');
+            pntFileName++; // move to after /
+            strcpy(messageToReturn.file.nameFile ,pntFileName);
             swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
             askServerAddProgram(&messageToReturn, socketServer);
             correctInput = true;

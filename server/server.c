@@ -7,19 +7,28 @@
 
 #define MAX_CLIENTS 50
 
+void compile(void* path) {
+
+}
+
 void addProgram(File fileToCreate, int socket) {
-    int fdNewFile = sopen("programs/test.c", O_CREAT | O_TRUNC | O_WRONLY, 0777);
     printf("Le client veut ajouter un programme\n");
     printf("Nom du programme: %s\n", fileToCreate.nameFile);
+    char path[255];
+    char* dir = "programs/";
+    strcat(path, dir);
+    strcat(path, fileToCreate.nameFile);
+    //lecture du fichier à ajouter venant du client.
+    int fdNewFile = sopen(path, O_CREAT | O_WRONLY, 0777);
     char fileBlock[BLOCK_FILE_MAX];
     printf("En attente du contenu du fichier à ajouter ...\n");
     int nbCharLu = sread(socket, fileBlock, BLOCK_FILE_MAX);
-    int i = 1;
     while(nbCharLu != 0) {
-        swrite(fdNewFile, fileBlock, nbCharLu);
+        nwrite(fdNewFile, fileBlock, nbCharLu);
         nbCharLu = sread(socket, fileBlock, BLOCK_FILE_MAX);
-        i++;
     }
+    //Compilation du fichier.
+    // fork_and_run1(compile, path);
     printf("Tout le fichier a été recu !\n");
     
 }
