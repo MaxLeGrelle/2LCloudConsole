@@ -10,6 +10,7 @@ client/client
 *.o
 server/*.o
 client/*.o
+tests/
 
 # User-specific files
 *.rsuser

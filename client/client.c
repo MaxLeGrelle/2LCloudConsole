@@ -1,4 +1,7 @@
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "../utils_v10.h"
 
@@ -19,12 +22,22 @@ void printHelp() {
     printf("\t- %c: Quitte le programme\n", COMM_EXIT);
 }
 
-// void askServerExecProgram(const StructMessage* messageToSend) {
-//     printf("%d\n", messageToSend->numProg);
-    
-// }
+void askServerExecProgram(const StructMessage* messageToSend) {
+    printf("%d\n", messageToSend->numProg);
+}
 
-StructMessage readCommandUser() {
+void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
+    int fd = sopen(messageToSend->file.path, O_RDONLY, 0600);
+    char buff[BLOCK_FILE_MAX];
+    int nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
+    while(nbCharLu != 0) {
+        swrite(socketServer, buff, BLOCK_FILE_MAX);
+        nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
+    }
+    printf("Programme ajouté au server !\n");
+}
+
+StructMessage readCommandUser(int socketServer) {
     StructMessage messageToReturn;
     char commande[MAX_COMM];
     bool correctInput = false;
@@ -34,12 +47,18 @@ StructMessage readCommandUser() {
         char action = commande[0];
         if (action == COMM_ADD_PROG) {
             messageToReturn.code = ADD;
+            char* path = commande+2; //points to first char of path
+            path[strlen(path)-1] = '\0'; //remove \n
+            strcpy(messageToReturn.file.path, path);
+            swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
+            askServerAddProgram(&messageToReturn, socketServer);
             correctInput = true;
         }else if (action == COMM_EXEC_PROG) {
             messageToReturn.code = EXEC;
             int ret = parseFirstInts(commande, 2, 3);
-            if (ret == -1) exit(1);
             messageToReturn.numProg = ret;
+            askServerExecProgram(&messageToReturn);
+            swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
             correctInput = true;
         }else if (action == COMM_EXIT) {
             printf("Au revoir!\n");
@@ -60,7 +79,6 @@ int main(int argc, char* argv[]) {
     sockFD = initSocketClient(serverIp, serverPort);
     
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
-    StructMessage message = readCommandUser();
-    swrite(sockFD, &message, sizeof(message));
+    /*StructMessage message = */readCommandUser(sockFD);
 
 }

@@ -382,7 +382,7 @@ int convertToInt(char c);
  *      start : the index where the method will start parsing.
  *      nbIntToParse : the number of character represenring an int to parse.
  * RES: returns the integer parsed from the string s found between 
- *      start and start+nbIntToParse. It returns -1 on error.
+ *      start and start+nbIntToParse.
  */
 int parseFirstInts(char* s,int start, int nbIntToParse);
 
