@@ -5,13 +5,13 @@ all: client server maint stat
 client: utils_v10.h  utils_v10.o client/client.c
 	cc $(CFLAGS) -o client/client client/client.c utils_v10.o  
 
-server: utils_v10.h  utils_v10.o server/server.c
+server: server/serverUtil.h utils_v10.h  utils_v10.o server/server.c
 	cc $(CFLAGS) -o server/server server/server.c utils_v10.o
 
-maint: utils_v10.h  utils_v10.o server/maint.c
+maint: server/serverUtil.h utils_v10.h  utils_v10.o server/maint.c
 	cc $(CFLAGS) -o server/maint server/maint.c utils_v10.o
 
-stat: utils_v10.h  utils_v10.o server/stat.c
+stat: server/serverUtil.h utils_v10.h  utils_v10.o server/stat.c
 	cc $(CFLAGS) -o server/stat server/stat.c utils_v10.o
 
 utils_v10.o: messages.h utils_v10.h utils_v10.c 

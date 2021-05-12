@@ -1,10 +1,7 @@
 #include <stdbool.h>
 
 #include "../utils_v10.h"
-#include "./filesInfo.h"
-
-#define SHM_KEY 493 //shared memory key
-#define SEM_KEY 925 //semaphore key
+#include "serverUtil.h"
 
 int main(int argc, char *argv[]){
 

@@ -1,8 +1,6 @@
 #include "../utils_v10.h"
-#include "./filesInfo.h"
+#include "serverUtil.h"
 
-#define SHM_KEY 493 //shared memory key
-#define SEM_KEY 925 //semaphore key
 #define PERM 0666
 #define CREATE 1
 #define DELETE 2

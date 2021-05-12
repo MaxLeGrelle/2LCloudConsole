@@ -42,7 +42,7 @@ void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
 
     //attente réponse server
     StructMessage responseServer;
-    nbCharLu = sread(socketServer, &responseServer, sizeof(responseServer));
+    // nbCharLu = sread(socketServer, &responseServer, sizeof(responseServer));
 
 }
 

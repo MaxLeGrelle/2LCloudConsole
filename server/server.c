@@ -2,8 +2,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "../utils_v10.h"
+#include "serverUtil.h"
 
 #define MAX_CLIENTS 50
 
@@ -32,11 +34,6 @@ void addProgram(File fileToCreate, int socket) {
     // fork_and_run1(compile, path);
     printf("Tout le fichier a été recu !\n");
     
-}
-
-void execProgram(int numProg) {
-    printf("Le client veut exec le prog num: %d\n", numProg);
-
 }
 
 void execution(void* arg1, void* arg2, void* socket){

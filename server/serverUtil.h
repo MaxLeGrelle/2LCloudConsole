@@ -1,10 +1,12 @@
-#ifndef _FILESINFO_H_
-#define _FILESINFO_H_
+#ifndef _SERVERUTIL_H_
+#define _SERVERUTIL_H_
 
 #include <stdbool.h>
 
-#define MAX_NAME 		50
-#define MAX_FILES       1000
+#define MAX_NAME 50
+#define MAX_FILES 1000
+#define SHM_KEY 493 //shared memory key
+#define SEM_KEY 925 //semaphore key
 
 /* struct file informations used to get informations of a specific file*/
 typedef struct {
