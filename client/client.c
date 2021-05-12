@@ -19,10 +19,10 @@ void printHelp() {
     printf("\t- %c: Quitte le programme\n", COMM_EXIT);
 }
 
-void askServerExecProgram(const StructMessage* messageToSend, int socketServer) {
-    printf("%d\n", messageToSend->numProg);
-    swrite(socketServer, messageToSend, sizeof(messageToSend));
-}
+// void askServerExecProgram(const StructMessage* messageToSend) {
+//     printf("%d\n", messageToSend->numProg);
+    
+// }
 
 StructMessage readCommandUser() {
     StructMessage messageToReturn;
@@ -61,6 +61,6 @@ int main(int argc, char* argv[]) {
     
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
     StructMessage message = readCommandUser();
-    askServerExecProgram(&message, sockFD);
+    swrite(sockFD, &message, sizeof(message));
 
 }

@@ -23,4 +23,11 @@ typedef struct {
   int code;
 } StructMessage;
 
+typedef struct {
+  int numProg;
+  int state;
+  int timeOfExecution;
+  int returnCode;
+} MessageAfterExecution;
+
 #endif
