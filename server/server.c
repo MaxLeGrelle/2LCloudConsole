@@ -8,6 +8,18 @@
 #include "serverUtil.h"
 
 #define MAX_CLIENTS 50
+#define DEFAULTNAME_INPUTFILE 0
+
+static int outputNum = DEFAULTNAME_INPUTFILE;
+static int sem_id;
+static int shm_id;
+
+int createAndOpenReturnFile(){
+    char arg[25];
+    sprintf(arg, "./server/output/%d",outputNum);
+    int fd = sopen(arg, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    return fd;
+}
 
 
 void compile(void* path) {
@@ -36,20 +48,16 @@ void addProgram(File fileToCreate, int socket) {
     
 }
 
-void execution(void* arg1, void* arg2, void* socket){
-    int* clientSocketFD = socket;
-    dup2(*clientSocketFD,1);
+void execution(void* arg1, void* arg2, void* fd){
+    int* arg = fd;
+    dup2(*arg,1);
     char* a1 = arg1;
     char* a2 = arg2;
     sexecl(a1, a2,NULL);
 }
 
 void changeInformationAfterExec(int numProg, long timeSpent){
-    // GET SEMAPHORE
-    int sem_id = sem_get(SEM_KEY, 1);
-
     // GET SHARED MEMORY
-    int shm_id = sshmget(SHM_KEY, sizeof(files), 0);
     files* f = sshmat(shm_id);
 
     sem_down0(sem_id);
@@ -60,9 +68,32 @@ void changeInformationAfterExec(int numProg, long timeSpent){
 
 }
 
+int stateCheck(int numProg){
+    int ret = 1;
+    files* f = sshmat(shm_id);
+
+    sem_down0(sem_id);
+    if(f->size <= numProg) ret = -2;
+    else if(f->tab[numProg].compile == 0) ret = -1;
+    sshmdt(f);
+    sem_up0(sem_id);
+    return ret;
+}
+
 ReturnMessage execProgram(int numProg, void* socket) {
     ReturnMessage mae;
+    mae.numProg = numProg;
+    
     printf("Le client veut exec le prog num: %d\n", numProg);
+
+    mae.state = stateCheck(numProg);
+    if(mae.state != 1){
+        //mae.returnCode = -1;
+        //mae.timeOfExecution = 0;
+        return mae;
+    }
+
+    int fd  = createAndOpenReturnFile();
     struct timeval start, end;
     char arg1[25];
     char arg2[25];
@@ -71,33 +102,54 @@ ReturnMessage execProgram(int numProg, void* socket) {
 
     gettimeofday(&start, NULL);
 
-    int childId = fork_and_run3(execution, &arg1, &arg2, socket);
+    int childId = fork_and_run3(execution, &arg1, &arg2, &fd);
     swaitpid(childId, &mae.returnCode, 0);
+    if(mae.returnCode != 0) mae.state = 0;
 
     gettimeofday(&end, NULL);
     long timeSpentSeconds = (end.tv_sec - start.tv_sec);
     long timeSpentMicro = (end.tv_usec - start.tv_usec);
-    int timeSpent = timeSpentSeconds*1000000 + timeSpentMicro;
-
-    changeInformationAfterExec(numProg, timeSpent);
-
+    mae.timeOfExecution = timeSpentSeconds*1000000 + timeSpentMicro;
+    
+    changeInformationAfterExec(numProg, mae.timeOfExecution);
+    sclose(fd);
     return mae;
+}
+
+void writeOutput(int* clientSocketFD){
+    char arg[20];
+    sprintf(arg, "./server/output/%d", outputNum);
+    int fd = sopen(arg, O_RDONLY, 0600);
+    char buff[OUTPUT_MAX];
+    int nbCharLu = sread(fd, buff, OUTPUT_MAX);
+    while(nbCharLu != 0) {
+        nwrite(*clientSocketFD, buff, nbCharLu);
+        nbCharLu = sread(fd, buff, OUTPUT_MAX);
+    }
+    sclose(fd);
+    int ret = shutdown(*clientSocketFD, SHUT_WR);
+    checkNeg(ret, "ERROR shutdown\n");
 }
 
 //thread lié à un client
 void clientProcess(void* socket) {
+    ReturnMessage retM;
     int* clientSocketFD = socket;
     StructMessage message;
     sread(*clientSocketFD, &message, sizeof(message));
     if (message.code == ADD) {
         addProgram(message.file, *clientSocketFD);
     }else if (message.code == EXEC) {
-       //MessageAfterExecution mae;
-        //mae = execProgram(message.numProg, socket);
+        retM = execProgram(message.numProg, socket);
+        swrite(*clientSocketFD, &retM, sizeof(ReturnMessage));
+        writeOutput(clientSocketFD);
     }
+    
+    
 }
 
 int main(int argc, char* argv[]) {
+    
     int port = atoi(argv[1]);
     int clientSocketFD;
 
@@ -105,11 +157,18 @@ int main(int argc, char* argv[]) {
     int servSockFD = initSocketServer(port);
     printf("Le serveur est à l'écoute sur le port %d\n", port);
 
+    // GET SEMAPHORE
+    sem_id = sem_get(SEM_KEY, 1);
+
+    // GET SHARED MEMORY
+    shm_id = sshmget(SHM_KEY, sizeof(files), 0);
+
     //listening if a client want to connect or communicate with the server.
     while(true) {
         clientSocketFD = saccept(servSockFD);
         printf("Un client s'est connecté ! : %d\n", clientSocketFD);
         
+        outputNum ++;
         //création d'un enfant par client qui se connecte.
         fork_and_run1(clientProcess, &clientSocketFD);
     }
