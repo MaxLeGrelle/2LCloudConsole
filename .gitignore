@@ -13,6 +13,7 @@ client/*.o
 tests/
 server/programs
 out/
+output/
 
 # User-specific files
 *.rsuser

@@ -5,6 +5,7 @@
 
 #define MSG_MAX 256
 #define BLOCK_FILE_MAX 1024
+#define OUTPUT_MAX 512
 #define NAME_FILE_MAX 255
 #define PATH_FILE_MAX 255
 
@@ -30,6 +31,7 @@ typedef struct {
   int state;
   int timeOfExecution;
   int returnCode;
+  char output[OUTPUT_MAX];
 } ReturnMessage;
 
 #endif

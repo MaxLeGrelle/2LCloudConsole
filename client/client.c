@@ -46,6 +46,22 @@ void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
 
 }
 
+void readServerResponse(int socketServer){
+    ReturnMessage retM;
+    sread(socketServer, &retM, sizeof(ReturnMessage));
+    printf("%d\n",retM.numProg);
+    printf("%d\n",retM.state);
+    printf("%d\n",retM.timeOfExecution);
+    printf("%d\n",retM.returnCode);
+    printf("output:\n");
+    char buff[OUTPUT_MAX];
+    int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+    while(nbCharLu != 0) {
+        nwrite(0, buff, nbCharLu);
+        nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+    }
+}
+
 StructMessage readCommandUser(int socketServer) {
     StructMessage messageToReturn;
     char commande[MAX_COMM];
@@ -69,9 +85,10 @@ StructMessage readCommandUser(int socketServer) {
             messageToReturn.code = EXEC;
             int ret = parseFirstInts(commande, 2, 3);
             messageToReturn.numProg = ret;
-            askServerExecProgram(&messageToReturn);
+            //askServerExecProgram(&messageToReturn);
             swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
             correctInput = true;
+            readServerResponse(socketServer);
         }else if (action == COMM_EXIT) {
             printf("Au revoir!\n");
             exit(0);
@@ -92,5 +109,6 @@ int main(int argc, char* argv[]) {
     
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
     /*StructMessage message = */readCommandUser(sockFD);
+
 
 }
