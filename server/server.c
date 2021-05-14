@@ -10,8 +10,11 @@
 #define MAX_CLIENTS 50
 
 
-void compile(void* path) {
-
+void compile(void* arg1) {
+    char* path = arg1;
+    char* executable = strdup(path);
+    executable[strlen(executable)-2] = '\0'; //remove .c
+    sexecl("/usr/bin/gcc", "cc", "-o", executable, path, NULL);
 }
 
 void addProgram(File fileToCreate, int socket) {
@@ -31,9 +34,13 @@ void addProgram(File fileToCreate, int socket) {
         nbCharLu = sread(socket, fileBlock, BLOCK_FILE_MAX);
     }
     //Compilation du fichier.
-    // fork_and_run1(compile, path);
+    int fdOut = sopen("out/out", O_CREAT | O_RDWR, 0777);
+    int fdStderr = dup(2);
+    dup2(fdOut, 2);
+    int childPID = fork_and_run1(compile, path);
+    swaitpid(childPID, NULL, 0);
     printf("Tout le fichier a été recu !\n");
-    
+    dup2(fdStderr, 2);
 }
 
 void execution(void* arg1, void* arg2, void* socket){

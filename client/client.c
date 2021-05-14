@@ -41,7 +41,7 @@ void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
     checkNeg(ret, "ERROR shutdown\n");
 
     //attente réponse server
-    StructMessage responseServer;
+    // StructMessage responseServer;
     // nbCharLu = sread(socketServer, &responseServer, sizeof(responseServer));
 
 }
