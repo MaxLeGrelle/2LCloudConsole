@@ -32,10 +32,10 @@ void askServerExecProgram(const StructMessage* messageToSend) {
 void readServerResponse(int socketServer){
     ReturnMessage retM;
     sread(socketServer, &retM, sizeof(ReturnMessage));
-    printf("%d\n",retM.numProg);
-    printf("%d\n",retM.state);
-    printf("%d\n",retM.timeOfExecution);
-    printf("%d\n",retM.returnCode);
+    printf("numéro de programme: %d\n",retM.numProg);
+    printf("état du programme: %d\n",retM.state);
+    printf("temps d'exécution du programme: %d\n",retM.timeOfExecution);
+    printf("code de retour: %d\n",retM.returnCode);
     printf("output:\n");
     char buff[OUTPUT_MAX];
     int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
