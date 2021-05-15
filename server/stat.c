@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     else{ //show stat about
         printf("%d\n",f->tab[fileNumber].number);
         printf("%s\n",f->tab[fileNumber].name);
-        printf("%s", f->tab[fileNumber].compile ? "true" : "false");
+        printf("%s\n", f->tab[fileNumber].compile==0 ? "true" : "false");
         printf("%d\n",f->tab[fileNumber].numberOfExecutions);
         printf("%d\n",f->tab[fileNumber].totalTimeExecution);
         sshmdt(f);

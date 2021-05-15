@@ -226,9 +226,9 @@ int main(int argc, char* argv[]) {
     //listening if a client want to connect or communicate with the server.
     while(true) {
         clientSocketFD = saccept(servSockFD);
-        printf("Un client s'est connecté ! : %d\n", clientSocketFD);
-        
         outputNum ++;
+        printf("%d) Une demande à été reçue !\n", outputNum);
+        
         //création d'un enfant par client qui se connecte.
         fork_and_run1(clientProcess, &clientSocketFD);
     }
