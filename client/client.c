@@ -28,23 +28,6 @@ void askServerExecProgram(const StructMessage* messageToSend) {
     printf("%d\n", messageToSend->numProg);
 }
 
-void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
-    //envoie fichier vers server
-    int fd = sopen(messageToSend->file.path, O_RDONLY, 0600);
-    char buff[BLOCK_FILE_MAX];
-    int nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
-    while(nbCharLu != 0) {
-        nwrite(socketServer, buff, nbCharLu);
-        nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
-    }
-    int ret = shutdown(socketServer, SHUT_WR);
-    checkNeg(ret, "ERROR shutdown\n");
-
-    //attente réponse server
-    // StructMessage responseServer;
-    // nbCharLu = sread(socketServer, &responseServer, sizeof(responseServer));
-
-}
 
 void readServerResponse(int socketServer){
     ReturnMessage retM;
@@ -60,6 +43,23 @@ void readServerResponse(int socketServer){
         nwrite(0, buff, nbCharLu);
         nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
     }
+}
+
+void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
+    //envoie fichier vers server
+    int fd = sopen(messageToSend->file.path, O_RDONLY, 0600);
+    char buff[BLOCK_FILE_MAX];
+    int nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
+    while(nbCharLu != 0) {
+        nwrite(socketServer, buff, nbCharLu);
+        nbCharLu = sread(fd, buff, BLOCK_FILE_MAX);
+    }
+    int ret = shutdown(socketServer, SHUT_WR);
+    checkNeg(ret, "ERROR shutdown\n");
+
+    //attente réponse server
+    readServerResponse(socketServer);
+
 }
 
 StructMessage readCommandUser(int socketServer) {
@@ -108,7 +108,5 @@ int main(int argc, char* argv[]) {
     sockFD = initSocketClient(serverIp, serverPort);
     
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
-    /*StructMessage message = */readCommandUser(sockFD);
-
-
+    readCommandUser(sockFD);
 }

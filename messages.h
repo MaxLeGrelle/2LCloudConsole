@@ -32,6 +32,7 @@ typedef struct {
   int timeOfExecution;
   int returnCode;
   char output[OUTPUT_MAX];
+  int compile;
 } ReturnMessage;
 
 #endif

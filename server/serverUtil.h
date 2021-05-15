@@ -12,7 +12,7 @@
 typedef struct {
     int number;
     char name[MAX_NAME];
-    bool compile;
+    int compile;
     int numberOfExecutions;
     int totalTimeExecution;
 

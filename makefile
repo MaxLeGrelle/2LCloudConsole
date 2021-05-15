@@ -27,4 +27,15 @@ clean:
 	rm -f server/server
 	rm -f server/maint
 	rm -f server/stat
+	rm -f output/*
+	ipcrm -a
+
+cleanAll:
+	rm -f *.o
+	rm -f client/client
+	rm -f server/server
+	rm -f server/maint
+	rm -f server/stat
+	rm -f output/*
+	rm -f programs/*
 	ipcrm -a
