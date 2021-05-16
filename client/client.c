@@ -105,13 +105,16 @@ void readServerResponse(int socketServer, int request){
         printf("code de retour: %d\n",retM.returnCode);
     }
     
-    printf("%s\n", titleOutput);
-    char buff[OUTPUT_MAX];
-    int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
-    while(nbCharLu != 0) {
-        nwrite(0, buff, nbCharLu);
-        nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+    if (retM.state != -1) {
+        printf("%s\n", titleOutput);
+        char buff[OUTPUT_MAX];
+        int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+        while(nbCharLu != 0) {
+            nwrite(0, buff, nbCharLu);
+            nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+        }
     }
+    
 }
 
 void askServerExecProgram(StructMessage messageToReturn, int numProg, int socketServer){

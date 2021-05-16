@@ -325,6 +325,8 @@ ReturnMessage execProgram(int numProg) {
     mae.state = stateCheck(numProg);
     if(mae.state != 1){
         if (mae.state == -1) {
+            mae.timeOfExecution = 0;
+            mae.returnCode = -1;
             printf("Le programme ne compile pas !\n");
         }
         return mae;
@@ -370,7 +372,9 @@ void writeOutput(int* clientSocketFD){
 
 void sendResponseToClient(const ReturnMessage* returnMessage, int clientSocket) {
     swrite(clientSocket, returnMessage, sizeof(*returnMessage));
-    writeOutput(&clientSocket);
+    if (returnMessage->state != -1) {
+        writeOutput(&clientSocket);
+    }
 }
 
 //thread lié à un client
