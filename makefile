@@ -36,6 +36,6 @@ cleanAll:
 	rm -f server/server
 	rm -f server/maint
 	rm -f server/stat
-	rm -f output/*
-	rm -f programs/*
+	rm -f server/output/*
+	rm -f server/programs/*
 	ipcrm -a

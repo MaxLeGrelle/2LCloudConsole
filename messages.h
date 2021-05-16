@@ -13,10 +13,14 @@
 #define ADD -1
 
 typedef struct {
-  char fileData[BLOCK_FILE_MAX];
-  char nameFile[NAME_FILE_MAX];
-  char path[PATH_FILE_MAX];
+  char name[NAME_FILE_MAX];
   int size;
+} NameFile;
+
+typedef struct {
+  char fileData[BLOCK_FILE_MAX];
+  char path[PATH_FILE_MAX];
+  NameFile nameFile;
 } File;
 
 /* struct message used between server and client */

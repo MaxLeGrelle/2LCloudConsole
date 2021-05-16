@@ -16,11 +16,11 @@ typedef struct {
     int numberOfExecutions;
     int totalTimeExecution;
 
-} fileInfo;
+} FileInfo;
 
 /* files used to tidy file informations*/
 typedef struct {
     int size;
-    fileInfo tab[MAX_FILES];
+    FileInfo tab[MAX_FILES];
 } files;
 #endif

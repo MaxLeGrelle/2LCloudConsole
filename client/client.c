@@ -22,14 +22,26 @@
  char* serverIp;
  int serverPort;
 
-void readServerResponse(int socketServer){
+void readServerResponse(int socketServer, int request){
     ReturnMessage retM;
     sread(socketServer, &retM, sizeof(ReturnMessage));
+
     printf("numéro de programme: %d\n",retM.numProg);
-    printf("état du programme: %d\n",retM.state);
-    printf("temps d'exécution du programme: %d\n",retM.timeOfExecution);
-    printf("code de retour: %d\n",retM.returnCode);
-    printf("output:\n");
+    char* titleOutput = "output:";
+    if (request != EXEC) {
+        if(retM.compile == 0){
+            printf("Le programme compile\n");
+        }else{
+            printf("Le programme ne compile pas\n");
+            titleOutput = "Message d'erreur du compilateur:";
+        }
+    }else {
+        printf("état du programme: %d\n",retM.state);
+        printf("temps d'exécution du programme: %d\n",retM.timeOfExecution);
+        printf("code de retour: %d\n",retM.returnCode);
+    }
+    
+    printf("%s\n", titleOutput);
     char buff[OUTPUT_MAX];
     int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
     while(nbCharLu != 0) {
@@ -38,11 +50,11 @@ void readServerResponse(int socketServer){
     }
 }
 
-void execProgram(StructMessage messageToReturn, int numProg, int socketServer){
+void askServerExecProgram(StructMessage messageToReturn, int numProg, int socketServer){
     messageToReturn.code = EXEC;
     messageToReturn.numProg = numProg;
     swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
-    readServerResponse(socketServer);
+    readServerResponse(socketServer, EXEC);
 }
 
 void recurrentExec(void* sockFd, void* pipe){
@@ -60,7 +72,7 @@ void recurrentExec(void* sockFd, void* pipe){
             //execute all the tab
             for(int i=0; i<size; i++){
                 StructMessage messageToReturn;
-                execProgram(messageToReturn, tab[i], *socketServer);
+                askServerExecProgram(messageToReturn, tab[i], *socketServer);
                 *socketServer = initSocketClient(serverIp, serverPort);
             }
         }else{
@@ -81,11 +93,9 @@ void printHelp() {
     printf("\t- %c: Quitte le programme\n", COMM_EXIT);
 }
 
-void askServerExecProgram(const StructMessage* messageToSend) {
-    printf("%d\n", messageToSend->numProg);
-}
-
-void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
+void askServerAddOrEditProgram(const StructMessage* messageToSend, int socketServer) {
+    //envoie des informations concernant l'opération à effectuer au server
+    swrite(socketServer, messageToSend, sizeof(*messageToSend));
     //envoie fichier vers server
     int fd = sopen(messageToSend->file.path, O_RDONLY | O_CREAT, 0600);
     char buff[BLOCK_FILE_MAX];
@@ -98,8 +108,7 @@ void askServerAddProgram(const StructMessage* messageToSend, int socketServer) {
     checkNeg(ret, "ERROR shutdown\n");
 
     //attente réponse server
-    readServerResponse(socketServer);
-
+    readServerResponse(socketServer, messageToSend->numProg);
 }
 
 void timer(void* interval, void* pipe){
@@ -113,7 +122,7 @@ void timer(void* interval, void* pipe){
     }
 }
 
-int initRecExecution(int interval, int sockfd/*, int* pipefd*/){
+int initRecExecution(int interval, int sockfd){
     int pipefd[2];
     //création du pipe
     spipe(pipefd);
@@ -124,51 +133,63 @@ int initRecExecution(int interval, int sockfd/*, int* pipefd*/){
     return pipefd[1];
 }
 
-StructMessage readCommandUser(int socketServer, int interval) {
-    StructMessage messageToReturn;
+void putBackslash0(char** s, char c) {
+    char* pntLastChar = strrchr(*s, c); //points to last char
+    pntLastChar[1] = '\0'; //remove \n
+}
+
+char* getFileNameFromPath(char* path) {
+    char* pntFileName = strrchr(path, '/'); //points to /name_of_prog
+    pntFileName++; // move to after /
+    return pntFileName;
+}
+
+void readCommandUser(int socketServer, int interval) {
+    StructMessage messageToSend;
     char commande[MAX_COMM];
-    bool correctInput = false;
     bool recInitied = false;
     int wrPipe;
-    printHelp();
-    while (!correctInput) {
-        sread(0, commande, MAX_COMM);
-        char action = commande[0];
-        if (action == COMM_ADD_PROG) {
-            messageToReturn.code = ADD;
-            char* path = commande+2; //points to first char of path
-            char* pntLastChar = strrchr(commande, 'c');
-            pntLastChar[1] = '\0';
-            //path[strlen(path)-1] = '\0'; //remove \n
-            strcpy(messageToReturn.file.path, path);
-            char* pntFileName = strrchr(path, '/');
-            pntFileName++; // move to after /
-            strcpy(messageToReturn.file.nameFile ,pntFileName);
-            swrite(socketServer, &messageToReturn, sizeof(messageToReturn));
-            askServerAddProgram(&messageToReturn, socketServer);
-            correctInput = true;
-        }else if (action == COMM_EXEC_PROG) {
-            messageToReturn.code = EXEC;
-            int numProg = parseFirstInts(commande, 2, 3);
-            correctInput = true;
-            execProgram(messageToReturn, numProg, socketServer);
-        }else if(action == COMM_EXECREC_PROG){
-            if(!recInitied){
-                wrPipe = initRecExecution(interval, socketServer);
-                recInitied = true;
-            }
-             int numProg = parseFirstInts(commande, 2, 3);
-             swrite(wrPipe, &numProg, sizeof(int));
-        
-        }else if (action == COMM_EXIT) {
-            printf("Au revoir!\n");
-            exit(0);
-            //TODO: return null et appeler méthode qui quit le prog proprement.
-        }else {
-            printHelp();
+    sread(0, commande, MAX_COMM);
+    char action = commande[0];
+    if (action == COMM_ADD_PROG) {
+        messageToSend.code = ADD;
+        char* path = commande+2; //points to first char of path
+        putBackslash0(&path, 'c');
+        strcpy(messageToSend.file.path, path);
+        strcpy(messageToSend.file.nameFile.name, getFileNameFromPath(path));
+        messageToSend.file.nameFile.size = strlen(messageToSend.file.nameFile.name)+1;
+        askServerAddOrEditProgram(&messageToSend, socketServer);
+    }else if (action == COMM_EXEC_PROG) {
+        messageToSend.code = EXEC;
+        int numProg = parseFirstInts(commande, 2, 3);
+        askServerExecProgram(messageToSend, numProg, socketServer);
+    }else if(action == COMM_EXECREC_PROG){
+        if(!recInitied){
+            wrPipe = initRecExecution(interval, socketServer);
+            recInitied = true;
         }
+        int numProg = parseFirstInts(commande, 2, 3);
+        swrite(wrPipe, &numProg, sizeof(int));
+    }else if (action == COMM_EDIT_PROG) {
+        int numProg = parseFirstInts(commande, 2, 3);
+        char numProgString[3];
+        sprintf(numProgString, "%d", numProg);
+        char* pntPathFile = commande+2; //points to first char of the number of the program
+        pntPathFile += strlen(numProgString); //move to last char of the number of the program
+        pntPathFile++; //move to the first char of the path by skipping the space
+        messageToSend.numProg = numProg;
+        putBackslash0(&pntPathFile, 'c');
+        strcpy(messageToSend.file.path, pntPathFile);
+        strcpy(messageToSend.file.nameFile.name, getFileNameFromPath(messageToSend.file.path));
+        messageToSend.file.nameFile.size = strlen(messageToSend.file.nameFile.name)+1;
+        askServerAddOrEditProgram(&messageToSend, socketServer);
+    }else if (action == COMM_EXIT) {
+        sclose(socketServer);
+        printf("Au revoir!\n");
+        exit(0);
+    }else {
+        printHelp();
     }
-    return messageToReturn;
 }
 
 
@@ -179,8 +200,11 @@ int main(int argc, char* argv[]) {
     int interval = atoi(argv[3]);
     int sockFD;
     
-    sockFD = initSocketClient(serverIp, serverPort);
-
     printf("Bienvenue dans le programme 2LCloudConsole\n\n");
-    readCommandUser(sockFD, interval);
+    printHelp();
+    while(true) {
+        sockFD = initSocketClient(serverIp, serverPort);
+
+        readCommandUser(sockFD, interval);
+    }
 }
