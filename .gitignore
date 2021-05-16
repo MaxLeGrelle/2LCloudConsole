@@ -11,9 +11,9 @@ client/client
 server/*.o
 client/*.o
 tests/
-server/programs
+server/programs/*
 out/
-output/
+server/output/*
 
 # User-specific files
 *.rsuser
