@@ -18,9 +18,45 @@
 
 #define MAX_COMM 255
 
-
  char* serverIp;
  int serverPort;
+
+/**
+ * PRE: socketServer : file descriptor of the server socket
+ *      request : what is the type of message
+ * POST: print the message received by the socket
+ */
+void readServerResponse(int socketServer, int request);
+
+/**
+ * PRE: messageToReturn : the message to write on the socket
+ *      numProg : the num of the prog to execute
+ *      socketServer :  file descriptor of the server socket
+ * POST: write the message to send informations to the server
+ */ 
+void askServerExecProgram(StructMessage messageToReturn, int numProg, int socketServer);
+
+/**
+ * PRE: sockFd : file descriptor of the server socket
+ *      pipe: file descriptor of a pipe (use only to read)
+ * POST: execute files added to the tab or add a num of prog to the tab (according to the pipe)
+ */
+void recurrentExec(void* sockFd, void* pipe);
+
+/**
+ * PRE: interval : interval of time to sleep
+ *      pipe: file descriptor of a pipe (use only to write)
+ * POST: send a HEARTBEAT (-1) in the pipe all interval of time
+ */
+void timer(void* interval, void* pipe);
+
+/**
+ * PRE: interval : interval of time
+ *      sockfd: file descriptor of the server socket
+ * POST: create a pipe and init the timer and the recurentExec
+ * RES: the pipe(write side only)
+ */
+int initRecExecution(int interval, int sockfd);
 
 void readServerResponse(int socketServer, int request){
     ReturnMessage retM;
