@@ -20,6 +20,9 @@
 
 char* serverIp;
 int serverPort;
+int pidTimer;
+int pidRecurrentExec;
+bool recInitied = false;
 
 /**
  * POST: prints on stdout the list of commands available.
@@ -193,17 +196,16 @@ int initRecExecution(int interval, int sockfd){
     int pipefd[2];
     //création du pipe
     spipe(pipefd);
-    fork_and_run2(recurrentExec, &sockfd, &pipefd);
+    pidRecurrentExec = fork_and_run2(recurrentExec, &sockfd, &pipefd);
     //fermeture de la lecture sur le pipe
     sclose(pipefd[0]);
-    fork_and_run2(timer, &interval, &pipefd);
+    pidTimer = fork_and_run2(timer, &interval, &pipefd);
     return pipefd[1];
 }
 
 void readCommandUser(int socketServer, int interval) {
     StructMessage messageToSend;
     char commande[MAX_COMM];
-    bool recInitied = false;
     int wrPipe;
     sread(0, commande, MAX_COMM);
     char action = commande[0];
@@ -221,6 +223,7 @@ void readCommandUser(int socketServer, int interval) {
         askServerExecProgram(messageToSend, numProg, socketServer);
     }else if(action == COMM_EXECREC_PROG){
         if(!recInitied){
+            printf("*******************************************************\nINITRECT\n*******************************************\n");
             wrPipe = initRecExecution(interval, socketServer);
             recInitied = true;
         }
@@ -242,6 +245,8 @@ void readCommandUser(int socketServer, int interval) {
     }else if (action == COMM_EXIT) {
         sclose(socketServer);
         printf("Au revoir!\n");
+        skill(pidTimer,SIGKILL);
+        skill(pidRecurrentExec,SIGKILL);
         exit(0);
     }else {
         printHelp();
