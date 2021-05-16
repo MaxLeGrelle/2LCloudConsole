@@ -18,8 +18,36 @@
 
 #define MAX_COMM 255
 
- char* serverIp;
- int serverPort;
+char* serverIp;
+int serverPort;
+
+/**
+ * POST: prints on stdout the list of commands available.
+ */
+void printHelp();
+
+/**
+ * PRE: messageToSend : is a StructMessage which is use to send 
+ * information about the program to add/edit to the server.
+ *     socketServer : file descriptor of the server's socket.
+ * POST: messageToSend is send to the server thanks to its socket socketServer,
+ * and the file located at the path in messageToSend is read and send to the server.
+ * Finally, it waits for the server's response.
+ */
+void askServerAddOrEditProgram(const StructMessage* messageToSend, int socketServer);
+
+/**
+ * PRE: socketServer : file descriptor of the server's socket.
+ *      interval : number of seconds to wait before each execution 
+ * when the user wants to perform recurrent execution.
+ * POST: reads stdin for a command and call the appropriated method.
+ * If the command entered is 'q' then the socket to the server 
+ * will be closed and the program will exits.
+ * If the command entered is not known, then it print the list of commands available.
+ */
+void readCommandUser(int socketServer, int interval);
+
+
 
 /**
  * PRE: socketServer : file descriptor of the server socket
@@ -77,13 +105,16 @@ void readServerResponse(int socketServer, int request){
         printf("code de retour: %d\n",retM.returnCode);
     }
     
-    printf("%s\n", titleOutput);
-    char buff[OUTPUT_MAX];
-    int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
-    while(nbCharLu != 0) {
-        nwrite(0, buff, nbCharLu);
-        nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+    if (retM.state != -1) {
+        printf("%s\n", titleOutput);
+        char buff[OUTPUT_MAX];
+        int nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+        while(nbCharLu != 0) {
+            nwrite(0, buff, nbCharLu);
+            nbCharLu = sread(socketServer, buff, OUTPUT_MAX);
+        }
     }
+    
 }
 
 void askServerExecProgram(StructMessage messageToReturn, int numProg, int socketServer){
@@ -167,17 +198,6 @@ int initRecExecution(int interval, int sockfd){
     sclose(pipefd[0]);
     fork_and_run2(timer, &interval, &pipefd);
     return pipefd[1];
-}
-
-void putBackslash0(char** s, char c) {
-    char* pntLastChar = strrchr(*s, c); //points to last char
-    pntLastChar[1] = '\0'; //remove \n
-}
-
-char* getFileNameFromPath(char* path) {
-    char* pntFileName = strrchr(path, '/'); //points to /name_of_prog
-    pntFileName++; // move to after /
-    return pntFileName;
 }
 
 void readCommandUser(int socketServer, int interval) {

@@ -16,6 +16,87 @@ static int sem_id;
 static int shm_id;
 
 /**
+ * PRE: numProg : a positive integer.
+ * RES: True if numProg is the number of a program contained in the shared memory,
+ * false otherwise.
+ */
+bool containedInSharedMemory(int numProg);
+
+/**
+ * RES: the next number for a new program.
+ */
+int getNewNumProg();
+
+/**
+ * PRE: compiled : integer which determines if the program number numProg compiled.
+ * if the program compiled, the parameter equals 0, else an integer different to 0.
+ *      name : the name of the program number numProg.
+ *      numProg : the number of the program recently added.
+ * POST: It adds all the information related to the new program into the shared memory
+ * and increase its size by one.
+ */
+void addProgInfoToSharedMem(int compiled, char* name, int numProg);
+
+/**
+ * PRE: compiled : integer which determines if the program number numProg compiled.
+ * if the program compiled, the parameter equals 0, else an integer different to 0.
+ *      name : the name of the program number numProg.
+ *      numProg : the number of the program to edit.
+ * POST: It edits all the information related to the program from the shared memory
+ */
+void editProgInfoInSharedMem(int compiled, char* name, int numProg);
+
+/**
+ * PRE: arg1 : a valid string containing the path of the program to compile.
+ * POST: Tries to compile the program located at arg1 thanks to an execl.
+ */
+void compile(void* arg1);
+
+/**
+ * PRE: socketClient : file descriptor of the client who made the query to add/edit a program.
+ *      fd : file descriptor of the file to add/edit in the code repository.
+ * POST: Reads the file received from the client and write its content to file descriptor fd.
+ */
+void readClientsFileAndWriteToFile(int socketClient, int fd);
+
+/**
+ * PRE: path : a valid string which is the path of a program C.
+ * POST: It creates an output file and writes the output of the compilation of the program C in it.
+ */
+int writeOutputFileAndCompile(char* path);
+
+/**
+ * PRE: message : contains all information about the request from the client.
+ *      socket : file descriptor of the client's socket.
+ * POST: It allows to edit an existing program by re writing all the content of the old file
+ * by the new one and compiles it. The output of the compilation will be wrote in a new output file.
+ * RES: Returns a struct ReturnMessage which contains the response of the server that will be sent to the client.
+ */
+ReturnMessage editProgram(StructMessage message, int socket);
+
+/**
+ * PRE: fileToCreate : Is the new file to create.
+ *      socket : file descriptor of the client's socket.
+ * POST: It allows to add and compile a new program. The output of the compilation will be wrote in a new output file.
+ * RES: Returns a struct ReturnMessage which contains the response of the server that will be sent to the client.
+ */
+ReturnMessage addProgram(File fileToCreate, int socket);
+
+/**
+ * PRE: returnMessage : contains all the information that will be send to the client.
+ *      clientSocket : file descriptor of the client's socket.
+ * POST: It first sends the content of returnMessage to the client then it will read and
+ * write the content of the output file to the client.
+ */
+void sendResponseToClient(const ReturnMessage* returnMessage, int clientSocket);
+
+/**
+ * PRE: socket : file descriptor of the client's socket.
+ * POST: Allows to call the appropriate method related to the action requested by the client.
+ */
+void clientProcess(void* socket);
+
+/**
  * POST: a new file is created and open (ready to be used).
  * RES: the file descriptor of this new file
  */
@@ -128,7 +209,7 @@ void readClientsFileAndWriteToFile(int socketClient, int fd) {
     printf("Tout le fichier a été recu !\n");
 }
 
-int writeOutputFileAndCompile(File file, ReturnMessage* returnMessage ,char* path) {
+int writeOutputFileAndCompile(char* path) {
     //creation fichier de sortie
     int fdOut = createAndOpenOutputFile();
     printf("Fichier de sortie: %d\n", outputNum);
@@ -172,7 +253,7 @@ ReturnMessage editProgram(StructMessage message, int socket) {
     //lecture du nouveau programme qui va en remplacer un venant du client
     readClientsFileAndWriteToFile(socket, fdReplaceFile);
 
-    int compiled = writeOutputFileAndCompile(message.file, &returnMessage, path);
+    int compiled = writeOutputFileAndCompile(path);
 
     editProgInfoInSharedMem(compiled, message.file.nameFile.name, returnMessage.numProg);
     returnMessage.compile = compiled;
@@ -195,7 +276,7 @@ ReturnMessage addProgram(File fileToCreate, int socket) {
     //lecture du fichier à ajouter venant du client.
     readClientsFileAndWriteToFile(socket, fdNewFile);
 
-    int compiled = writeOutputFileAndCompile(fileToCreate, &returnMessage, path);
+    int compiled = writeOutputFileAndCompile(path);
 
     addProgInfoToSharedMem(compiled, fileToCreate.nameFile.name, returnMessage.numProg);
     returnMessage.compile = compiled;
@@ -244,6 +325,8 @@ ReturnMessage execProgram(int numProg) {
     mae.state = stateCheck(numProg);
     if(mae.state != 1){
         if (mae.state == -1) {
+            mae.timeOfExecution = 0;
+            mae.returnCode = -1;
             printf("Le programme ne compile pas !\n");
         }
         return mae;
@@ -260,7 +343,6 @@ ReturnMessage execProgram(int numProg) {
 
     int childId = fork_and_run3(execution, &arg1, &arg2, &fd);
     swaitpid(childId, &mae.returnCode, 0);
-    printf("EXIT CODE : %d\n", mae.returnCode);
     if(mae.returnCode != 0) mae.state = 0;
 
     gettimeofday(&end, NULL);
@@ -290,7 +372,9 @@ void writeOutput(int* clientSocketFD){
 
 void sendResponseToClient(const ReturnMessage* returnMessage, int clientSocket) {
     swrite(clientSocket, returnMessage, sizeof(*returnMessage));
-    writeOutput(&clientSocket);
+    if (returnMessage->state != -1) {
+        writeOutput(&clientSocket);
+    }
 }
 
 //thread lié à un client

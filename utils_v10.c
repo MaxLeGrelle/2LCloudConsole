@@ -509,3 +509,14 @@ int parseFirstInts(char* s,int start, int nbIntToParse) {
     free(stringOfNumbers);
     return nbParsed;
 }
+
+void putBackslash0(char** s, char c) {
+    char* pntLastChar = strrchr(*s, c); //points to last char
+    pntLastChar[1] = '\0'; //remove \n
+}
+
+char* getFileNameFromPath(char* path) {
+    char* pntFileName = strrchr(path, '/'); //points to /name_of_prog
+    pntFileName++; // move to after /
+    return pntFileName;
+}
