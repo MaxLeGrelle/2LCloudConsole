@@ -303,7 +303,7 @@ void clientProcess(void* socket) {
         retM = addProgram(message.file, *clientSocketFD);
         sendResponseToClient(&retM, *clientSocketFD);
     }else if (message.code == EXEC) {
-        retM = execProgram(message.numProg, socket);
+        retM = execProgram(message.numProg);
         sendResponseToClient(&retM, *clientSocketFD);
     }else if (containedInSharedMemory(message.numProg)) {
         retM = editProgram(message, *clientSocketFD);
