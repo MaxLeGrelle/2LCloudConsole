@@ -221,7 +221,6 @@ ReturnMessage execProgram(int numProg, void* socket) {
 
     int childId = fork_and_run3(execution, &arg1, &arg2, &fd);
     swaitpid(childId, &mae.returnCode, 0);
-    printf("EXIT CODE : %d\n", mae.returnCode);
     if(mae.returnCode != 0) mae.state = 0;
 
     gettimeofday(&end, NULL);

@@ -386,6 +386,14 @@ int convertToInt(char c);
  */
 int parseFirstInts(char* s,int start, int nbIntToParse);
 
+/**
+ * PRE: s : a string which contains the character c.
+ *      c : a character contained in s.
+ * POST: a \0 has been put right after.
+ *       the last occurence of the character c found in s.
+ */
+void putBackslash0(char** s, char c);
+
 #endif  // _UTILS_H_
 
 
