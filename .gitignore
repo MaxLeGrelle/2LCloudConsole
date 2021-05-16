@@ -12,8 +12,10 @@ server/*.o
 client/*.o
 tests/
 server/programs/*
+!server/programs/.keep
 out/
 server/output/*
+!server/output/.keep
 
 # User-specific files
 *.rsuser
