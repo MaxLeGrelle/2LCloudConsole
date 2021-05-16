@@ -6,7 +6,19 @@
 #define DELETE 2
 #define RESERVE 3 
 
+/**
+ * PRE: shm_id: id of the shared memory
+ *      sem_id: id of semaphore
+ * POST: the shared memory and semaphore are deleted
+ */ 
 void deleteMemory(int shm_id, int sem_id);
+
+/**
+ * PRE: shm_id: id of the shared memory
+ *      sem_id: id of semaphore
+ *      duree: a specific time(seconds)
+ * POST:the memory is reserved for a specific time
+ */
 void reserveMemory(int shm_id, int sem_id, int duree);
 
 int main(int argc, char *argv[]){ 
