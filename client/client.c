@@ -223,7 +223,6 @@ void readCommandUser(int socketServer, int interval) {
         askServerExecProgram(messageToSend, numProg, socketServer);
     }else if(action == COMM_EXECREC_PROG){
         if(!recInitied){
-            printf("*******************************************************\nINITRECT\n*******************************************\n");
             wrPipe = initRecExecution(interval, socketServer);
             recInitied = true;
         }
