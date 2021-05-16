@@ -15,6 +15,45 @@ static int outputNum = DEFAULTNAME_OUTPUTFILE;
 static int sem_id;
 static int shm_id;
 
+/**
+ * POST: a new file is created and open (ready to be used).
+ * RES: the file descriptor of this new file
+ */
+int createAndOpenOutputFile();
+
+/**
+ * PRE: arg1 & arg2 : strings to execute execl
+ *      fd : file descriptor to get the output
+ * POST: a program is executed and the output is in the file given
+ */
+void execution(void* arg1, void* arg2, void* fd);
+
+/**
+ * PRE: numProg : the number of the program executed
+ *      timeSpent : the time of execution of the program
+ * POST: the shared memory is updated according to the execution
+ */
+void changeInformationAfterExec(int numProg, long timeSpent);
+
+/**
+ * PRE: numProg: the number of the program to execute
+ * RES: return the status according to informations in shared memory 
+ */
+int stateCheck(int numProg);
+
+/**
+ * PRE: numProg : the number of the program to execute
+ * POST: the program is executed if it exist and compile
+ * RES: a message with the informations of the execution
+ */
+ReturnMessage execProgram(int numProg);
+
+/**
+ * PRE: clientSOcketFD : the file descriptor of the client socket
+ * POST: the output is send to the client by the socket
+ */
+void writeOutput(int* clientSocketFD);
+
 bool containedInSharedMemory(int numProg) {
     files* f = sshmat(shm_id);
     bool contained = numProg <= f->size-1 && numProg >= 0;
@@ -196,7 +235,7 @@ int stateCheck(int numProg){
     return ret;
 }
 
-ReturnMessage execProgram(int numProg, void* socket) {
+ReturnMessage execProgram(int numProg) {
     ReturnMessage mae;
     mae.numProg = numProg;
     
